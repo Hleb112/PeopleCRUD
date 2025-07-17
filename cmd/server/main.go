@@ -9,6 +9,7 @@ import (
 	"PeopleCRUD/internal/service"
 	"PeopleCRUD/internal/utils"
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -19,6 +20,9 @@ import (
 )
 
 func main() {
+	for _, env := range os.Environ() {
+		fmt.Println(env)
+	}
 	// Инициализация логгера
 	logger := utils.InitLogger()
 
