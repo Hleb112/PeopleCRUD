@@ -23,7 +23,7 @@ func SetupRoutes(router *gin.Engine, personService service.PersonService, logger
 	peopleHandler := handlers.NewPeopleHandler(personService, logger)
 
 	// Health check
-	router.GET("/health", peopleHandler.HealthCheck)
+	//router.GET("/health", peopleHandler.HealthCheck)
 
 	// Swagger documentation
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -35,26 +35,26 @@ func SetupRoutes(router *gin.Engine, personService service.PersonService, logger
 		people := v1.Group("/people")
 		{
 			people.POST("", peopleHandler.CreatePerson)
-			people.GET("", peopleHandler.GetAllPeople)
-			people.GET("/:id", peopleHandler.GetPerson)
+			//people.GET("", peopleHandler.GetAllPeople)
+			//people.GET("/:id", peopleHandler.GetPerson)
 			people.PUT("/:id", peopleHandler.UpdatePerson)
-			people.DELETE("/:id", peopleHandler.DeletePerson)
-			people.GET("/lastname/:lastname", peopleHandler.GetPeopleByLastName)
+			//people.DELETE("/:id", peopleHandler.DeletePerson)
+			//people.GET("/lastname/:lastname", peopleHandler.GetPeopleByLastName)
 
 			// Email routes
-			people.POST("/:id/emails", peopleHandler.AddEmail)
+			//people.POST("/:id/emails", peopleHandler.AddEmail)
 
 			// Friend routes
-			people.POST("/:id/friends", peopleHandler.AddFriend)
-			people.GET("/:id/friends", peopleHandler.GetFriends)
-			people.DELETE("/:id/friends/:friendId", peopleHandler.RemoveFriend)
+			//people.POST("/:id/friends", peopleHandler.AddFriend)
+			//people.GET("/:id/friends", peopleHandler.GetFriends)
+			//people.DELETE("/:id/friends/:friendId", peopleHandler.RemoveFriend)
 		}
 
 		// Email routes
-		emails := v1.Group("/emails")
-		{
-			emails.PUT("/:emailId", peopleHandler.UpdateEmail)
-			emails.DELETE("/:emailId", peopleHandler.DeleteEmail)
-		}
+		//emails := v1.Group("/emails")
+		//{
+		//	emails.PUT("/:emailId", peopleHandler.UpdateEmail)
+		//	emails.DELETE("/:emailId", peopleHandler.DeleteEmail)
+		//}
 	}
 }

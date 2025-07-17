@@ -25,7 +25,7 @@ type PersonService interface {
 	UpdateEmail(ctx context.Context, emailID int, email string, isPrimary bool) error
 	DeleteEmail(ctx context.Context, emailID int) error
 	AddFriend(ctx context.Context, personID, friendID int) error
-	GetFriends(ctx context.Context, personID int) ([]*models.Person, error)
+	GetFriends(ctx context.Context, personID int) ([]models.Person, error)
 	RemoveFriend(ctx context.Context, personID, friendID int) error
 }
 
@@ -385,7 +385,7 @@ func (s *personService) AddFriend(ctx context.Context, personID, friendID int) e
 	return nil
 }
 
-func (s *personService) GetFriends(ctx context.Context, personID int) ([]*models.Person, error) {
+func (s *personService) GetFriends(ctx context.Context, personID int) ([]models.Person, error) {
 	// Проверяем, что человек существует
 	_, err := s.repo.GetByID(personID)
 	if err != nil {

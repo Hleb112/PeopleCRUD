@@ -23,7 +23,7 @@ type PersonRepository interface {
 	GetEmails(personID int) ([]models.Email, error)
 	AddFriend(personID, friendID int) error
 	RemoveFriend(personID, friendID int) error
-	GetFriends(personID int) ([]*models.Person, error)
+	GetFriends(personID int) ([]models.Person, error)
 }
 
 type personRepository struct {
@@ -351,7 +351,7 @@ func (r *personRepository) RemoveFriend(personID, friendID int) error {
 	return nil
 }
 
-func (r *personRepository) GetFriends(personID int) ([]*models.Person, error) {
+func (r *personRepository) GetFriends(personID int) ([]models.Person, error) {
 	query := `
 		SELECT p.id, p.first_name, p.last_name, p.middle_name, p.age, p.gender, p.nationality, p.created_at, p.updated_at
 		FROM people p
@@ -364,9 +364,9 @@ func (r *personRepository) GetFriends(personID int) ([]*models.Person, error) {
 	}
 	defer rows.Close()
 
-	var friends []*models.Person
+	var friends []models.Person
 	for rows.Next() {
-		person := &models.Person{}
+		person := models.Person{}
 		err := rows.Scan(
 			&person.ID, &person.FirstName, &person.LastName, &person.MiddleName,
 			&person.Age, &person.Gender, &person.Nationality, &person.CreatedAt, &person.UpdatedAt,
