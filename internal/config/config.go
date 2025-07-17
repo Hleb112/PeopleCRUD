@@ -50,19 +50,18 @@ func Load() *Config {
 }
 
 func (c *Config) DatabaseURL() string {
-	// Если есть DATABASE_URL, используем его (приоритет для Back4App)
+	// Если DATABASE_URL явно задан (например, вручную в настройках Koyeb), используем его
 	if c.Database.URL != "" {
 		return c.Database.URL
 	}
 
-	// Иначе собираем из частей
-	return fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s",
+	// Собираем URL из переменных Koyeb
+	return fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=require",
 		c.Database.User,
 		c.Database.Password,
 		c.Database.Host,
 		c.Database.Port,
 		c.Database.DBName,
-		c.Database.SSLMode,
 	)
 }
 
