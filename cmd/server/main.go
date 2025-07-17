@@ -9,7 +9,6 @@ import (
 	"PeopleCRUD/internal/service"
 	"PeopleCRUD/internal/utils"
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -20,9 +19,6 @@ import (
 )
 
 func main() {
-	for _, env := range os.Environ() {
-		fmt.Println(env)
-	}
 	// Инициализация логгера
 	logger := utils.InitLogger()
 
@@ -37,9 +33,9 @@ func main() {
 	defer db.Close()
 
 	// Выполнение миграций
-	if err := database.Migrate(cfg.DatabaseURL()); err != nil {
-		logger.Fatal("Failed to run migrations:", err)
-	}
+	//if err := database.Migrate(cfg.DatabaseURL()); err != nil {
+	//	logger.Fatal("Failed to run migrations:", err)
+	//}
 
 	// Инициализация кэша
 	cache := cache.NewMemoryCache()

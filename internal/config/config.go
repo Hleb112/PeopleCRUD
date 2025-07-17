@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 )
@@ -27,23 +28,41 @@ type ServerConfig struct {
 }
 
 func Load() *Config {
-	// Приоритет DATABASE_URL (для Back4App)
-	databaseURL := os.Getenv("DATABASE_URL")
+	// Получаем порт с обработкой ошибки
+	port, err := strconv.Atoi(getEnv("DB_PORT", "5432"))
+	if err != nil {
+		log.Printf("Invalid DB_PORT, using default 5432. Error: %v", err)
+		port = 5432
+	}
 
-	port, _ := strconv.Atoi(getEnv("DB_PORT", "5432"))
+	// Конфигурация по умолчанию для Docker
+	dbConfig := DatabaseConfig{
+		Host:     getEnv("DB_HOST", "localhost"),
+		Port:     port,
+		User:     getEnv("DB_USER", "postgres"),
+		Password: getEnv("DB_PASSWORD", "5558465Ab"), // Используем ваш пароль по умолчанию
+		DBName:   getEnv("DB_NAME", "people_crud"),
+		SSLMode:  getEnv("DB_SSL_MODE", "disable"),
+	}
+
+	// Если есть DATABASE_URL (для Heroku/Back4App), переопределяем конфигурацию
+	if databaseURL := os.Getenv("DATABASE_URL"); databaseURL != "" {
+		dbConfig.URL = databaseURL
+	} else {
+		// Формируем DSN строку из отдельных параметров
+		dbConfig.URL = fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s",
+			dbConfig.User,
+			dbConfig.Password,
+			dbConfig.Host,
+			dbConfig.Port,
+			dbConfig.DBName,
+			dbConfig.SSLMode)
+	}
 
 	return &Config{
-		Database: DatabaseConfig{
-			URL:      databaseURL,
-			Host:     getEnv("DB_HOST", "localhost"),
-			Port:     port,
-			User:     getEnv("DB_USER", "postgres"),
-			Password: getEnv("DB_PASSWORD", "password"),
-			DBName:   getEnv("DB_NAME", "people_crud"),
-			SSLMode:  getEnv("DB_SSL_MODE", "disable"),
-		},
+		Database: dbConfig,
 		Server: ServerConfig{
-			Port: getEnv("PORT", getEnv("SERVER_PORT", "8080")), // Back4App использует PORT
+			Port: getEnv("PORT", getEnv("SERVER_PORT", "8080")),
 		},
 		Environment: getEnv("ENVIRONMENT", "development"),
 	}

@@ -3,6 +3,8 @@ FROM golang:1.23-alpine AS builder
 
 WORKDIR /app
 
+# Копируем wait-for скрипт
+COPY wait-for .
 # Copy go mod files
 COPY go.mod go.sum ./
 RUN go mod download
@@ -11,7 +13,7 @@ RUN go mod download
 COPY . .
 
 # Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /app/main ./cmd/server/main.go
 
 # Final stage
 FROM alpine:latest
