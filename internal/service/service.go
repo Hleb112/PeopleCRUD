@@ -150,7 +150,6 @@ func (s *personService) UpdatePerson(ctx context.Context, id int, req *models.Up
 		return nil, err
 	}
 
-	// Проверяем существование человека
 	if _, err := s.repo.GetByID(id); err != nil {
 		s.logger.WithError(err).Error("Failed to check person existence")
 		return nil, errors.NewInternalServerError("Failed to update person")
@@ -165,7 +164,6 @@ func (s *personService) UpdatePerson(ctx context.Context, id int, req *models.Up
 }
 
 func (s *personService) DeletePerson(ctx context.Context, id int) error {
-	// Проверяем существование человека
 	if _, err := s.repo.GetByID(id); err != nil {
 		s.logger.WithError(err).Error("Failed to check person existence")
 		return errors.NewInternalServerError("Failed to delete person")
@@ -180,13 +178,11 @@ func (s *personService) DeletePerson(ctx context.Context, id int) error {
 }
 
 func (s *personService) AddEmail(ctx context.Context, personID int, email string, isPrimary bool) error {
-	// Проверяем существование человека
 	if _, err := s.repo.GetByID(personID); err != nil {
 		s.logger.WithError(err).Error("Failed to check person existence")
 		return errors.NewInternalServerError("Failed to add email")
 	}
 
-	// Если email основной, сбрасываем флаг у других email этого пользователя
 	if isPrimary {
 		emails, err := s.repo.GetEmails(personID)
 		if err != nil {
@@ -217,7 +213,6 @@ func (s *personService) AddFriend(ctx context.Context, personID, friendID int) e
 		return errors.NewValidationError("Cannot add yourself as a friend")
 	}
 
-	// Проверяем существование обоих людей
 	if _, err := s.repo.GetByID(personID); err != nil {
 		s.logger.WithError(err).Error("Failed to check person existence")
 		return errors.NewInternalServerError("Failed to add friend")
@@ -228,7 +223,6 @@ func (s *personService) AddFriend(ctx context.Context, personID, friendID int) e
 		return errors.NewInternalServerError("Failed to add friend")
 	}
 
-	// Проверяем, что дружба еще не существует
 	friends, err := s.repo.GetFriends(personID)
 	if err != nil {
 		s.logger.WithError(err).Error("Failed to get friends list")
@@ -241,14 +235,12 @@ func (s *personService) AddFriend(ctx context.Context, personID, friendID int) e
 		}
 	}
 
-	// Добавляем дружбу (двустороннюю)
 	if err := s.repo.AddFriend(personID, friendID); err != nil {
 		s.logger.WithError(err).Error("Failed to add friend")
 		return errors.NewInternalServerError("Failed to add friend")
 	}
 
 	if err := s.repo.AddFriend(friendID, personID); err != nil {
-		// Откатываем первую запись при ошибке
 		s.repo.RemoveFriend(personID, friendID)
 		s.logger.WithError(err).Error("Failed to add reciprocal friendship")
 		return errors.NewInternalServerError("Failed to add friend")
@@ -258,7 +250,6 @@ func (s *personService) AddFriend(ctx context.Context, personID, friendID int) e
 }
 
 func (s *personService) GetFriends(ctx context.Context, personID int) ([]models.Person, error) {
-	// Проверяем существование человека
 	if _, err := s.repo.GetByID(personID); err != nil {
 		s.logger.WithError(err).Error("Failed to check person existence")
 		return nil, errors.NewInternalServerError("Failed to get friends")
@@ -274,14 +265,12 @@ func (s *personService) GetFriends(ctx context.Context, personID int) ([]models.
 }
 
 func (s *personService) RemoveFriend(ctx context.Context, personID, friendID int) error {
-	// Удаляем дружбу (двустороннюю)
 	if err := s.repo.RemoveFriend(personID, friendID); err != nil {
 		s.logger.WithError(err).Error("Failed to remove friend")
 		return errors.NewInternalServerError("Failed to remove friend")
 	}
 
 	if err := s.repo.RemoveFriend(friendID, personID); err != nil {
-		// Восстанавливаем первую запись при ошибке
 		s.repo.AddFriend(personID, friendID)
 		s.logger.WithError(err).Error("Failed to remove reciprocal friendship")
 		return errors.NewInternalServerError("Failed to remove friend")

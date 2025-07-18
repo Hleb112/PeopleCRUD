@@ -99,13 +99,11 @@ func (r *personRepository) GetByID(id int) (*models.Person, error) {
 }
 
 func (r *personRepository) Update(id int, req *models.UpdatePersonRequest) error {
-	// Проверяем, что человек существует
 	_, err := r.GetByID(id)
 	if err != nil {
 		return err
 	}
 
-	// Строим динамический запрос
 	setParts := []string{}
 	args := []interface{}{}
 	argIndex := 1
