@@ -260,3 +260,7 @@ func (h *PeopleHandler) handleError(c *gin.Context, err error) {
 		c.JSON(http.StatusInternalServerError, errors.NewInternalServerError("Internal server error"))
 	}
 }
+
+func (h *PeopleHandler) HealthCheck(c *gin.Context) {
+	c.JSON(http.StatusOK, "WORKING")
+}

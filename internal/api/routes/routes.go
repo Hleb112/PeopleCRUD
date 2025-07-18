@@ -22,6 +22,8 @@ func SetupRoutes(router *gin.Engine, personService service.PersonService, logger
 	{
 		v1 := api.Group("/v1")
 		{
+			v1.GET("/health", peopleHandler.HealthCheck)
+
 			v1.POST("/people", peopleHandler.CreatePerson)
 			v1.GET("/people", peopleHandler.GetAllPeople)
 			v1.GET("/people/:id", peopleHandler.GetPerson)
