@@ -250,8 +250,9 @@ func (h *PeopleHandler) RemoveFriend(c *gin.Context) {
 func (h *PeopleHandler) handleError(c *gin.Context, err error) {
 	if appErr, ok := err.(*errors.AppError); ok {
 		h.logger.WithFields(logrus.Fields{
-			"error": appErr.Error(),
-			"code":  appErr.Code,
+			"error":   appErr.Error(),
+			"code":    appErr.Code,
+			"details": appErr.Details,
 		}).Error("Handler error")
 		c.JSON(appErr.Code, appErr)
 	} else {
