@@ -8,53 +8,28 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func SetupRoutes(router *gin.Engine, personService service.PersonService, logger *logrus.Logger) {
-	// Middleware
 	router.Use(middleware.Logger(logger))
 	router.Use(middleware.Recovery(logger))
 	router.Use(middleware.CORS())
 	router.Use(middleware.Timeout(30 * time.Second))
 
-	// Handlers
 	peopleHandler := handlers.NewPeopleHandler(personService, logger)
 
-	// Health check
-	//router.GET("/health", peopleHandler.HealthCheck)
-
-	// Swagger documentation
-	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-
-	// API routes
-	v1 := router.Group("/api/v1")
+	api := router.Group("/api")
 	{
-		// People routes
-		people := v1.Group("/people")
+		v1 := api.Group("/v1")
 		{
-			people.POST("", peopleHandler.CreatePerson)
-			//people.GET("", peopleHandler.GetAllPeople)
-			//people.GET("/:id", peopleHandler.GetPerson)
-			people.PUT("/:id", peopleHandler.UpdatePerson)
-			//people.DELETE("/:id", peopleHandler.DeletePerson)
-			//people.GET("/lastname/:lastname", peopleHandler.GetPeopleByLastName)
+			v1.POST("/people", peopleHandler.CreatePerson)
+			v1.GET("/people", peopleHandler.GetAllPeople)
+			v1.GET("/people/:id", peopleHandler.GetPerson)
+			v1.PUT("/people/:id", peopleHandler.UpdatePerson)
+			v1.DELETE("/people/:id", peopleHandler.DeletePerson)
 
-			// Email routes
-			//people.POST("/:id/emails", peopleHandler.AddEmail)
-
-			// Friend routes
-			//people.POST("/:id/friends", peopleHandler.AddFriend)
-			//people.GET("/:id/friends", peopleHandler.GetFriends)
-			//people.DELETE("/:id/friends/:friendId", peopleHandler.RemoveFriend)
+			v1.POST("/people/:id/emails", peopleHandler.AddEmail)
+			v1.GET("/people/:id/friends", peopleHandler.GetFriends)
 		}
-
-		// Email routes
-		//emails := v1.Group("/emails")
-		//{
-		//	emails.PUT("/:emailId", peopleHandler.UpdateEmail)
-		//	emails.DELETE("/:emailId", peopleHandler.DeleteEmail)
-		//}
 	}
 }
