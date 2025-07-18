@@ -1,0 +1,82 @@
+# ==============================================
+# People CRUD API - Тестовые запросы
+# ==============================================
+
+# 1. Health Check
+curl -X GET "http://localhost:8080/health"
+
+# 2. Создание нового человека
+curl -X POST "http://localhost:8080/api/v1/people" \
+-H "Content-Type: application/json" \
+-d '{
+  "first_name": "Иван",
+  "last_name": "Иванов",
+  "middle_name": "Иванович",
+  "emails": ["ivan@example.com", "ivan.work@example.com"]
+}'
+
+# 3. Получение списка людей (с пагинацией)
+curl -X GET "http://localhost:8080/api/v1/people?limit=10&offset=0"
+
+# 4. Поиск людей по фамилии
+curl -X GET "http://localhost:8080/api/v1/people/lastname/Иванов"
+
+# 5. Получение информации о человеке по ID
+curl -X GET "http://localhost:8080/api/v1/people/1"
+
+# 6. Обновление информации о человеке
+curl -X PUT "http://localhost:8080/api/v1/people/1" \
+-H "Content-Type: application/json" \
+-d '{
+  "first_name": "Иван",
+  "last_name": "Петров",
+  "age": 30,
+  "nationality": "RU"
+}'
+
+# 7. Удаление человека
+curl -X DELETE "http://localhost:8080/api/v1/people/1"
+
+# 8. Добавление email для человека
+curl -X POST "http://localhost:8080/api/v1/people/1/emails" \
+-H "Content-Type: application/json" \
+-d '{
+  "email": "new.email@example.com",
+  "is_primary": true
+}'
+
+# 9. Добавление друга (предполагая, что человек с ID=2 существует)
+curl -X POST "http://localhost:8080/api/v1/people/1/friends/2"
+
+# 10. Получение списка друзей
+curl -X GET "http://localhost:8080/api/v1/people/1/friends"
+
+# 11. Удаление друга
+curl -X DELETE "http://localhost:8080/api/v1/people/1/friends/2"
+
+# ==============================================
+# Тестовые сценарии с ошибками
+# ==============================================
+
+# 12. Создание с невалидными данными
+curl -X POST "http://localhost:8080/api/v1/people" \
+-H "Content-Type: application/json" \
+-d '{
+  "first_name": "",
+  "last_name": "Иванов",
+  "emails": ["invalid-email"]
+}'
+
+# 13. Запрос несуществующего человека
+curl -X GET "http://localhost:8080/api/v1/people/999"
+
+# 14. Добавление невалидного email
+curl -X POST "http://localhost:8080/api/v1/people/1/emails" \
+-H "Content-Type: application/json" \
+-d '{
+  "email": "invalid-email",
+  "is_primary": true
+}'
+
+# 15. Добавление себя в друзья
+curl -X POST "http://localhost:8080/api/v1/people/1/friends/1"

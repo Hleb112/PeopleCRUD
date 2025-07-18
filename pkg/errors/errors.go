@@ -22,10 +22,6 @@ func NewAppError(code int, message, details string) *AppError {
 	}
 }
 
-func NewBadRequestError(message string) *AppError {
-	return NewAppError(http.StatusBadRequest, message, "")
-}
-
 func NewNotFoundError(message string) *AppError {
 	return NewAppError(http.StatusNotFound, message, "")
 }

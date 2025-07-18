@@ -2,6 +2,7 @@ package main
 
 import (
 	"PeopleCRUD/internal/api/routes"
+	"PeopleCRUD/internal/cache"
 	"PeopleCRUD/internal/config"
 	"PeopleCRUD/internal/database"
 	"PeopleCRUD/internal/repository"
@@ -18,32 +19,22 @@ import (
 )
 
 func main() {
-	// Инициализация логгера
 	logger := utils.InitLogger()
 
-	// Загрузка конфигурации
 	cfg := config.Load()
 
-	// Подключение к базе данных
 	db, err := database.Connect(cfg.DatabaseURL())
 	if err != nil {
 		logger.Fatal("Failed to connect to database:", err)
 	}
 	defer db.Close()
 
-	// Выполнение миграций
-	//if err := database.Migrate(cfg.DatabaseURL()); err != nil {
-	//	logger.Fatal("Failed to run migrations:", err)
-	//}
-
-	// Инициализация кэша
-	//cache := cache.NewMemoryCache()
+	cacheInst := cache.NewMemoryCache()
 
 	// Инициализация слоев
 	personRepo := repository.NewPersonRepository(db)
-	personService := service.NewPersonService(personRepo, logger)
+	personService := service.NewPersonService(personRepo, cacheInst, logger)
 
-	// Настройка Gin
 	if cfg.Environment == "production" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -51,7 +42,6 @@ func main() {
 	router := gin.New()
 	routes.SetupRoutes(router, personService, logger)
 
-	// Настройка сервера
 	server := &http.Server{
 		Addr:           ":" + cfg.Server.Port,
 		Handler:        router,
@@ -61,7 +51,6 @@ func main() {
 		MaxHeaderBytes: 1 << 20,
 	}
 
-	// Запуск сервера в горутине
 	go func() {
 		logger.Info("Server starting on port ", cfg.Server.Port)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
