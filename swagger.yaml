@@ -1,19 +1,11 @@
-openapi: 3.0.0
+openapi: 3.0.1
 info:
-  title: People Management API
-  description: API для управления людьми, их email-адресами и дружескими связями
+  title: People API
+  description: API для работы с людьми, их email и друзьями
   version: 1.0.0
 servers:
-  - url: /api/v1
-    description: Основной API сервер
-
-tags:
-  - name: People
-    description: Операции с людьми
-  - name: Emails
-    description: Управление email-адресами
-  - name: Friends
-    description: Управление дружескими связями
+  - url: http://localhost:8080/api/v1
+    description: Локальный сервер разработки
 
 paths:
   /health:
@@ -23,248 +15,249 @@ paths:
         '200':
           description: Сервис работает
           content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: OK
-                  db:
-                    type: string
-                    example: connected
+            text/plain:
+              example: "OK"
 
   /people:
-    post:
-      tags: [People]
-      summary: Создать нового человека
-      description: Создает новую запись о человеке с возможностью добавления email-адресов
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreatePersonRequest'
-      responses:
-        '201':
-          description: Человек успешно создан
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PersonWithDetails'
-        '400':
-          description: Неверные входные данные
-        '500':
-          description: Внутренняя ошибка сервера
-
     get:
-      tags: [People]
-      summary: Получить список людей
-      description: Возвращает список людей с пагинацией
+      summary: Получение списка людей с пагинацией
       parameters:
-        - $ref: '#/components/parameters/limit'
-        - $ref: '#/components/parameters/offset'
-      responses:
-        '200':
-          description: Успешный запрос
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/PersonWithDetails'
-                  total:
-                    type: integer
-                  limit:
-                    type: integer
-                  offset:
-                    type: integer
-        '500':
-          description: Внутренняя ошибка сервера
-
-  /people/lastname/{lastname}:
-    get:
-      tags: [People]
-      summary: Поиск людей по фамилии
-      description: Возвращает всех людей с указанной фамилией
-      parameters:
-        - name: lastname
-          in: path
-          required: true
+        - name: limit
+          in: query
+          description: Количество записей на странице
           schema:
-            type: string
-          description: Фамилия для поиска
+            type: integer
+            default: 10
+        - name: offset
+          in: query
+          description: Смещение (пропуск записей)
+          schema:
+            type: integer
+            default: 0
       responses:
         '200':
-          description: Успешный запрос
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/PersonWithDetails'
-        '400':
-          description: Не указана фамилия
-        '500':
-          description: Внутренняя ошибка сервера
-
-  /people/{id}:
-    get:
-      tags: [People]
-      summary: Получить информацию о человеке
-      description: Возвращает полную информацию о человеке по ID
-      parameters:
-        - $ref: '#/components/parameters/personId'
-      responses:
-        '200':
-          description: Успешный запрос
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PersonWithDetails'
-        '400':
-          description: Неверный ID
-        '404':
-          description: Человек не найден
-        '500':
-          description: Внутренняя ошибка сервера
-
-    put:
-      tags: [People]
-      summary: Обновить информацию о человеке
-      description: Обновляет информацию о существующем человеке
-      parameters:
-        - $ref: '#/components/parameters/personId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdatePersonRequest'
-      responses:
-        '200':
-          description: Информация успешно обновлена
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PersonWithDetails'
-        '400':
-          description: Неверные входные данные
-        '404':
-          description: Человек не найден
-        '500':
-          description: Внутренняя ошибка сервера
-
-    delete:
-      tags: [People]
-      summary: Удалить человека
-      description: Удаляет запись о человеке по ID
-      parameters:
-        - $ref: '#/components/parameters/personId'
-      responses:
-        '204':
-          description: Человек успешно удален
-        '400':
-          description: Неверный ID
-        '404':
-          description: Человек не найден
-        '500':
-          description: Внутренняя ошибка сервера
-
-  /people/{id}/emails:
-    post:
-      tags: [Emails]
-      summary: Добавить email для человека
-      description: Добавляет email адрес для указанного человека
-      parameters:
-        - $ref: '#/components/parameters/personId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AddEmailRequest'
-      responses:
-        '201':
-          description: Email успешно добавлен
-        '400':
-          description: Неверные входные данные
-        '404':
-          description: Человек не найден
-        '500':
-          description: Внутренняя ошибка сервера
-
-  /people/{id}/friends:
-    get:
-      tags: [Friends]
-      summary: Получить друзей человека
-      description: Возвращает список друзей указанного человека
-      parameters:
-        - $ref: '#/components/parameters/personId'
-      responses:
-        '200':
-          description: Успешный запрос
+          description: Список людей
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Person'
-        '400':
-          description: Неверный ID
-        '404':
-          description: Человек не найден
-        '500':
-          description: Внутренняя ошибка сервера
 
     post:
-      tags: [Friends]
-      summary: Добавить друга
-      description: Добавляет дружескую связь между двумя людьми
+      summary: Создание нового человека
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonCreate'
+            examples:
+              valid:
+                value:
+                  first_name: "Иван"
+                  last_name: "Иванов"
+                  middle_name: "Иванович"
+                  emails: ["ivan@example.com", "ivan.work@example.com"]
+              invalid:
+                value:
+                  first_name: ""
+                  last_name: "Иванов"
+                  emails: ["invalid-email"]
+      responses:
+        '201':
+          description: Человек успешно создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+        '400':
+          description: Невалидные данные
+
+  /people/lastname/{lastname}:
+    get:
+      summary: Поиск людей по фамилии
       parameters:
-        - $ref: '#/components/parameters/personId'
+        - name: lastname
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "Иванов"
+      responses:
+        '200':
+          description: Найденные люди
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Person'
+
+  /people/{id}:
+    get:
+      summary: Получение информации о человеке по ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: Информация о человеке
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+        '404':
+          description: Человек не найден
+
+    put:
+      summary: Обновление информации о человеке
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonUpdate'
+            example:
+              first_name: "Иван"
+              last_name: "Петров"
+              age: 30
+              nationality: "RU"
+      responses:
+        '200':
+          description: Информация успешно обновлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+        '404':
+          description: Человек не найден
+
+    delete:
+      summary: Удаление человека
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '204':
+          description: Человек успешно удален
+        '404':
+          description: Человек не найден
+
+  /people/{id}/emails:
+    post:
+      summary: Добавление email для человека
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailCreate'
+            examples:
+              valid:
+                value:
+                  email: "new.email@example.com"
+                  is_primary: true
+              invalid:
+                value:
+                  email: "invalid-email"
+                  is_primary: true
+      responses:
+        '201':
+          description: Email успешно добавлен
+        '400':
+          description: Невалидный email
+        '404':
+          description: Человек не найден
+
+  /people/{id}/friends:
+    get:
+      summary: Получение списка друзей
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: Список друзей
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Person'
+        '404':
+          description: Человек не найден
+
+  /people/{id}/friends/{friendId}:
+    post:
+      summary: Добавление друга
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
         - name: friendId
           in: path
           required: true
           schema:
             type: integer
-          description: ID друга
+          example: 2
       responses:
         '201':
           description: Друг успешно добавлен
         '400':
-          description: Неверные ID
+          description: Нельзя добавить себя в друзья
         '404':
           description: Человек или друг не найден
-        '409':
-          description: Дружеская связь уже существует
-        '500':
-          description: Внутренняя ошибка сервера
 
     delete:
-      tags: [Friends]
-      summary: Удалить друга
-      description: Удаляет дружескую связь между двумя людьми
+      summary: Удаление друга
       parameters:
-        - $ref: '#/components/parameters/personId'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
         - name: friendId
           in: path
           required: true
           schema:
             type: integer
-          description: ID друга
+          example: 2
       responses:
         '204':
           description: Друг успешно удален
-        '400':
-          description: Неверные ID
         '404':
           description: Человек или друг не найден
-        '500':
-          description: Внутренняя ошибка сервера
 
 components:
   schemas:
@@ -276,179 +269,75 @@ components:
           example: 1
         first_name:
           type: string
-          example: Иван
+          example: "Иван"
         last_name:
           type: string
-          example: Иванов
+          example: "Иванов"
         middle_name:
           type: string
-          nullable: true
-          example: Иванович
+          example: "Иванович"
         age:
           type: integer
-          nullable: true
           example: 30
-        gender:
-          type: string
-          nullable: true
-          example: male
         nationality:
           type: string
-          nullable: true
-          example: RU
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
-
-    PersonWithDetails:
-      allOf:
-        - $ref: '#/components/schemas/Person'
-        - type: object
-          properties:
-            emails:
-              type: array
-              items:
-                $ref: '#/components/schemas/Email'
-            friends:
-              type: array
-              items:
-                $ref: '#/components/schemas/Person'
-
-    Email:
-      type: object
-      properties:
-        id:
-          type: integer
-          example: 1
-        person_id:
-          type: integer
-          example: 1
-        email:
-          type: string
-          example: user@example.com
-        is_primary:
-          type: boolean
-          example: true
-        created_at:
-          type: string
-          format: date-time
-
-    CreatePersonRequest:
-      type: object
-      required: [first_name, last_name]
-      properties:
-        first_name:
-          type: string
-          minLength: 1
-          maxLength: 100
-          example: Иван
-        last_name:
-          type: string
-          minLength: 1
-          maxLength: 100
-          example: Иванов
-        middle_name:
-          type: string
-          nullable: true
-          maxLength: 100
-          example: Иванович
+          example: "RU"
         emails:
           type: array
           items:
             type: string
-            format: email
-            example: user@example.com
+          example: ["ivan@example.com", "ivan.work@example.com"]
+        friends:
+          type: array
+          items:
+            $ref: '#/components/schemas/Person'
 
-    UpdatePersonRequest:
+    PersonCreate:
+      type: object
+      required:
+        - first_name
+        - last_name
+      properties:
+        first_name:
+          type: string
+          example: "Иван"
+        last_name:
+          type: string
+          example: "Иванов"
+        middle_name:
+          type: string
+          example: "Иванович"
+        emails:
+          type: array
+          items:
+            type: string
+          example: ["ivan@example.com", "ivan.work@example.com"]
+
+    PersonUpdate:
       type: object
       properties:
         first_name:
           type: string
-          nullable: true
-          minLength: 1
-          maxLength: 100
-          example: Иван
+          example: "Иван"
         last_name:
           type: string
-          nullable: true
-          minLength: 1
-          maxLength: 100
-          example: Петров
-        middle_name:
-          type: string
-          nullable: true
-          maxLength: 100
-          example: Сергеевич
+          example: "Петров"
         age:
           type: integer
-          nullable: true
-          minimum: 1
-          maximum: 150
-          example: 35
-        gender:
-          type: string
-          nullable: true
-          enum: [male, female]
-          example: male
+          example: 30
         nationality:
           type: string
-          nullable: true
-          minLength: 2
-          maxLength: 2
-          example: RU
+          example: "RU"
 
-    AddEmailRequest:
+    EmailCreate:
       type: object
-      required: [email]
+      required:
+        - email
       properties:
         email:
           type: string
           format: email
-          example: new.email@example.com
+          example: "new.email@example.com"
         is_primary:
           type: boolean
-          default: false
           example: true
-
-    ErrorResponse:
-      type: object
-      properties:
-        code:
-          type: integer
-          example: 400
-        message:
-          type: string
-          example: "Validation error"
-        details:
-          type: string
-          nullable: true
-          example: "Email is invalid"
-
-  parameters:
-    personId:
-      name: id
-      in: path
-      required: true
-      schema:
-        type: integer
-      description: ID человека
-    limit:
-      name: limit
-      in: query
-      schema:
-        type: integer
-        default: 10
-        minimum: 1
-        maximum: 100
-      description: Количество записей на странице
-    offset:
-      name: offset
-      in: query
-      schema:
-        type: integer
-        default: 0
-        minimum: 0
-      description: Смещение

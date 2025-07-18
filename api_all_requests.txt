@@ -3,7 +3,7 @@
 # ==============================================
 
 # 1. Health Check
-curl -X GET "http://localhost:8080/health"
+curl -X GET "http://localhost:8080/api/v1/health"
 
 # 2. Создание нового человека
 curl -X POST "http://localhost:8080/api/v1/people" \
