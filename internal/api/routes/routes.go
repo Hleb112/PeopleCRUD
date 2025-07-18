@@ -25,14 +25,15 @@ func SetupRoutes(router *gin.Engine, personService service.PersonService, logger
 			v1.POST("/people", peopleHandler.CreatePerson)
 			v1.GET("/people", peopleHandler.GetAllPeople)
 			v1.GET("/people/:id", peopleHandler.GetPerson)
+			v1.GET("/people/lastname/:lastname", peopleHandler.GetPeopleByLastName)
 			v1.PUT("/people/:id", peopleHandler.UpdatePerson)
 			v1.DELETE("/people/:id", peopleHandler.DeletePerson)
 
+			v1.GET("/people/:id/friends", peopleHandler.GetFriends)
 			v1.POST("/people/:id/friends/:friendId", peopleHandler.AddFriend)
 			v1.DELETE("/people/:id/friends/:friendId", peopleHandler.RemoveFriend)
 
 			v1.POST("/people/:id/emails", peopleHandler.AddEmail)
-			v1.GET("/people/:id/friends", peopleHandler.GetFriends)
 		}
 	}
 }
