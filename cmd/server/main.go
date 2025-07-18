@@ -2,6 +2,7 @@ package main
 
 import (
 	"PeopleCRUD/internal/api/routes"
+	"PeopleCRUD/internal/cache"
 	"PeopleCRUD/internal/config"
 	"PeopleCRUD/internal/database"
 	"PeopleCRUD/internal/repository"
@@ -28,9 +29,11 @@ func main() {
 	}
 	defer db.Close()
 
+	cacheInst := cache.NewMemoryCache()
+
 	// Инициализация слоев
 	personRepo := repository.NewPersonRepository(db)
-	personService := service.NewPersonService(personRepo, logger)
+	personService := service.NewPersonService(personRepo, cacheInst, logger)
 
 	if cfg.Environment == "production" {
 		gin.SetMode(gin.ReleaseMode)

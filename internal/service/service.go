@@ -1,12 +1,15 @@
 package service
 
 import (
+	"PeopleCRUD/internal/cache"
 	"PeopleCRUD/internal/models"
 	"PeopleCRUD/internal/repository"
 	"PeopleCRUD/pkg/errors"
 	"context"
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"strings"
+	"time"
 )
 
 type PersonService interface {
@@ -24,12 +27,14 @@ type PersonService interface {
 
 type personService struct {
 	repo   repository.PersonRepository
+	cache  *cache.MemoryCache
 	logger *logrus.Logger
 }
 
-func NewPersonService(repo repository.PersonRepository, logger *logrus.Logger) PersonService {
+func NewPersonService(repo repository.PersonRepository, cache *cache.MemoryCache, logger *logrus.Logger) PersonService {
 	return &personService{
 		repo:   repo,
+		cache:  cache,
 		logger: logger,
 	}
 }
@@ -63,6 +68,15 @@ func (s *personService) CreatePerson(ctx context.Context, req *models.CreatePers
 }
 
 func (s *personService) GetPersonByID(ctx context.Context, id int) (*models.PersonWithDetails, error) {
+	cacheKey := fmt.Sprintf("person:%d", id)
+
+	if cached, found := s.cache.Get(cacheKey); found {
+		if person, ok := cached.(*models.PersonWithDetails); ok {
+			s.logger.Debugf("Returning person %d from cache", id)
+			return person, nil
+		}
+	}
+
 	person, err := s.repo.GetByID(id)
 	if err != nil {
 		s.logger.WithError(err).Error("Failed to get person by ID")
@@ -72,20 +86,23 @@ func (s *personService) GetPersonByID(ctx context.Context, id int) (*models.Pers
 	emails, err := s.repo.GetEmails(person.ID)
 	if err != nil {
 		s.logger.WithError(err).Error("Failed to get person emails")
-		emails = []models.Email{} // Возвращаем пустой список при ошибке
+		emails = []models.Email{}
 	}
 
 	friends, err := s.repo.GetFriends(person.ID)
 	if err != nil {
 		s.logger.WithError(err).Error("Failed to get person friends")
-		friends = []models.Person{} // Возвращаем пустой список при ошибке
+		friends = []models.Person{}
 	}
 
-	return &models.PersonWithDetails{
+	result := &models.PersonWithDetails{
 		Person:  *person,
 		Emails:  emails,
 		Friends: friends,
-	}, nil
+	}
+
+	s.cache.Set(cacheKey, result, 5*time.Minute)
+	return result, nil
 }
 
 func (s *personService) GetPeopleByLastName(ctx context.Context, lastName string) ([]*models.PersonWithDetails, error) {
@@ -113,11 +130,16 @@ func (s *personService) GetPeopleByLastName(ctx context.Context, lastName string
 }
 
 func (s *personService) GetAllPeople(ctx context.Context, limit, offset int) ([]*models.PersonWithDetails, int, error) {
-	if limit < 1 || limit > 100 {
-		limit = 10
-	}
-	if offset < 0 {
-		offset = 0
+	cacheKey := fmt.Sprintf("people:limit=%d&offset=%d", limit, offset)
+
+	if cached, found := s.cache.Get(cacheKey); found {
+		if data, ok := cached.(struct {
+			People []*models.PersonWithDetails
+			Total  int
+		}); ok {
+			s.logger.Debug("Returning people list from cache")
+			return data.People, data.Total, nil
+		}
 	}
 
 	people, err := s.repo.GetAll(limit, offset)
@@ -142,6 +164,15 @@ func (s *personService) GetAllPeople(ctx context.Context, limit, offset int) ([]
 		result[i] = details
 	}
 
+	cacheData := struct {
+		People []*models.PersonWithDetails
+		Total  int
+	}{
+		People: result,
+		Total:  total,
+	}
+
+	s.cache.Set(cacheKey, cacheData, 1*time.Minute)
 	return result, total, nil
 }
 
@@ -160,6 +191,7 @@ func (s *personService) UpdatePerson(ctx context.Context, id int, req *models.Up
 		return nil, errors.NewInternalServerError("Failed to update person")
 	}
 
+	s.invalidatePersonCache(id)
 	return s.GetPersonByID(ctx, id)
 }
 
@@ -174,6 +206,7 @@ func (s *personService) DeletePerson(ctx context.Context, id int) error {
 		return errors.NewInternalServerError("Failed to delete person")
 	}
 
+	s.invalidatePersonCache(id)
 	return nil
 }
 
@@ -277,4 +310,9 @@ func (s *personService) RemoveFriend(ctx context.Context, personID, friendID int
 	}
 
 	return nil
+}
+
+func (s *personService) invalidatePersonCache(id int) {
+	s.cache.Delete(fmt.Sprintf("person:%d", id))
+	s.cache.DeleteByPrefix("people:")
 }
