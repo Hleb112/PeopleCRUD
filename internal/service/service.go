@@ -55,12 +55,12 @@ func (s *personService) CreatePerson(ctx context.Context, req *models.CreatePers
 		err := s.repo.CreateWithTransaction(person, req.Emails)
 		if err != nil {
 			s.logger.WithError(err).Error("Failed to create person with emails")
-			return nil, errors.NewInternalServerError("Failed to create person")
+			return nil, errors.NewInternalServerError(err.Error())
 		}
 	} else {
 		if err := s.repo.Create(person); err != nil {
 			s.logger.WithError(err).Error("Failed to create person")
-			return nil, errors.NewInternalServerError("Failed to create person")
+			return nil, errors.NewInternalServerError(err.Error())
 		}
 	}
 
@@ -80,7 +80,7 @@ func (s *personService) GetPersonByID(ctx context.Context, id int) (*models.Pers
 	person, err := s.repo.GetByID(id)
 	if err != nil {
 		s.logger.WithError(err).Error("Failed to get person by ID")
-		return nil, errors.NewInternalServerError("Failed to get person")
+		return nil, errors.NewInternalServerError(err.Error())
 	}
 
 	emails, err := s.repo.GetEmails(person.ID)
@@ -113,7 +113,7 @@ func (s *personService) GetPeopleByLastName(ctx context.Context, lastName string
 	people, err := s.repo.GetByLastName(lastName)
 	if err != nil {
 		s.logger.WithError(err).Error("Failed to get people by last name")
-		return nil, errors.NewInternalServerError("Failed to get people")
+		return nil, errors.NewInternalServerError(err.Error())
 	}
 
 	result := make([]*models.PersonWithDetails, len(people))
@@ -145,7 +145,7 @@ func (s *personService) GetAllPeople(ctx context.Context, limit, offset int) ([]
 	people, err := s.repo.GetAll(limit, offset)
 	if err != nil {
 		s.logger.WithError(err).Error("Failed to get all people")
-		return nil, 0, errors.NewInternalServerError("Failed to get people")
+		return nil, 0, errors.NewInternalServerError(err.Error())
 	}
 
 	total, err := s.repo.GetCount()
@@ -183,7 +183,7 @@ func (s *personService) UpdatePerson(ctx context.Context, id int, req *models.Up
 
 	if _, err := s.repo.GetByID(id); err != nil {
 		s.logger.WithError(err).Error("Failed to check person existence")
-		return nil, errors.NewInternalServerError("Failed to update person")
+		return nil, errors.NewInternalServerError(err.Error())
 	}
 
 	if err := s.repo.Update(id, req); err != nil {
@@ -203,7 +203,7 @@ func (s *personService) DeletePerson(ctx context.Context, id int) error {
 
 	if err := s.repo.Delete(id); err != nil {
 		s.logger.WithError(err).Error("Failed to delete person")
-		return errors.NewInternalServerError("Failed to delete person")
+		return errors.NewInternalServerError(err.Error())
 	}
 
 	s.invalidatePersonCache(id)
