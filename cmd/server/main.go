@@ -2,7 +2,6 @@ package main
 
 import (
 	"PeopleCRUD/internal/api/routes"
-	"PeopleCRUD/internal/cache"
 	"PeopleCRUD/internal/config"
 	"PeopleCRUD/internal/database"
 	"PeopleCRUD/internal/repository"
@@ -38,11 +37,11 @@ func main() {
 	//}
 
 	// Инициализация кэша
-	cache := cache.NewMemoryCache()
+	//cache := cache.NewMemoryCache()
 
 	// Инициализация слоев
 	personRepo := repository.NewPersonRepository(db)
-	personService := service.NewPersonService(personRepo, cache, logger)
+	personService := service.NewPersonService(personRepo, logger)
 
 	// Настройка Gin
 	if cfg.Environment == "production" {

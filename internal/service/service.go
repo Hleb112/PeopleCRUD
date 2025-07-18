@@ -17,6 +17,8 @@ type PersonService interface {
 	DeletePerson(ctx context.Context, id int) error
 	AddEmail(ctx context.Context, personID int, email string, isPrimary bool) error
 	GetFriends(ctx context.Context, personID int) ([]models.Person, error)
+	AddFriend(ctx context.Context, personID, friendID int) error
+	RemoveFriend(ctx context.Context, personID, friendID int) error
 }
 
 type personService struct {
@@ -142,4 +144,59 @@ func (s *personService) GetFriends(ctx context.Context, personID int) ([]models.
 	}
 
 	return s.repo.GetFriends(personID)
+}
+
+func (s *personService) AddFriend(ctx context.Context, personID, friendID int) error {
+	if personID == friendID {
+		return errors.NewBadRequestError("Cannot add yourself as a friend")
+	}
+
+	// Проверяем что оба человека существуют
+	if _, err := s.repo.GetByID(personID); err != nil {
+		return err
+	}
+
+	if _, err := s.repo.GetByID(friendID); err != nil {
+		return err
+	}
+
+	// Проверяем что дружба еще не существует
+	friends, err := s.repo.GetFriends(personID)
+	if err != nil {
+		return err
+	}
+
+	for _, friend := range friends {
+		if friend.ID == friendID {
+			return errors.NewBadRequestError("Friendship already exists")
+		}
+	}
+
+	// Добавляем дружбу в обе стороны
+	if err := s.repo.AddFriend(personID, friendID); err != nil {
+		return err
+	}
+
+	if err := s.repo.AddFriend(friendID, personID); err != nil {
+		// Откатываем первую запись при ошибке
+		s.repo.RemoveFriend(personID, friendID)
+		return err
+	}
+
+	return nil
+}
+
+func (s *personService) RemoveFriend(ctx context.Context, personID, friendID int) error {
+	// Удаляем дружбу в обе стороны
+	if err := s.repo.RemoveFriend(personID, friendID); err != nil {
+		return err
+	}
+
+	if err := s.repo.RemoveFriend(friendID, personID); err != nil {
+		// Восстанавливаем первую запись при ошибке
+		s.repo.AddFriend(personID, friendID)
+		return err
+	}
+
+	return nil
 }

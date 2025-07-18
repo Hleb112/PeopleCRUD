@@ -184,3 +184,51 @@ func (h *PeopleHandler) handleError(c *gin.Context, err error) {
 		c.JSON(http.StatusInternalServerError, errors.NewInternalServerError("Internal server error"))
 	}
 }
+
+func (h *PeopleHandler) AddFriend(c *gin.Context) {
+	personID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		h.logger.WithField("id", c.Param("id")).Warn("Invalid person ID format")
+		c.JSON(http.StatusBadRequest, errors.NewValidationError("Invalid person ID"))
+		return
+	}
+
+	friendID, err := strconv.Atoi(c.Param("friendId"))
+	if err != nil {
+		h.logger.WithField("friendId", c.Param("friendId")).Warn("Invalid friend ID format")
+		c.JSON(http.StatusBadRequest, errors.NewValidationError("Invalid friend ID"))
+		return
+	}
+
+	ctx := c.Request.Context()
+	if err := h.service.AddFriend(ctx, personID, friendID); err != nil {
+		h.handleError(c, err)
+		return
+	}
+
+	c.Status(http.StatusCreated)
+}
+
+func (h *PeopleHandler) RemoveFriend(c *gin.Context) {
+	personID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		h.logger.WithField("id", c.Param("id")).Warn("Invalid person ID format")
+		c.JSON(http.StatusBadRequest, errors.NewValidationError("Invalid person ID"))
+		return
+	}
+
+	friendID, err := strconv.Atoi(c.Param("friendId"))
+	if err != nil {
+		h.logger.WithField("friendId", c.Param("friendId")).Warn("Invalid friend ID format")
+		c.JSON(http.StatusBadRequest, errors.NewValidationError("Invalid friend ID"))
+		return
+	}
+
+	ctx := c.Request.Context()
+	if err := h.service.RemoveFriend(ctx, personID, friendID); err != nil {
+		h.handleError(c, err)
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}

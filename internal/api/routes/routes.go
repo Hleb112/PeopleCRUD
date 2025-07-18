@@ -28,6 +28,9 @@ func SetupRoutes(router *gin.Engine, personService service.PersonService, logger
 			v1.PUT("/people/:id", peopleHandler.UpdatePerson)
 			v1.DELETE("/people/:id", peopleHandler.DeletePerson)
 
+			v1.POST("/people/:id/friends/:friendId", peopleHandler.AddFriend)
+			v1.DELETE("/people/:id/friends/:friendId", peopleHandler.RemoveFriend)
+
 			v1.POST("/people/:id/emails", peopleHandler.AddEmail)
 			v1.GET("/people/:id/friends", peopleHandler.GetFriends)
 		}
